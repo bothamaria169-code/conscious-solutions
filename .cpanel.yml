@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/public_html/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /usr/bin/rsync -a --exclude='.git' --exclude='.cpanel.yml' --exclude='.gitignore' --exclude='.gitattributes' --exclude='README.md' --exclude='config/db.php' --exclude='config/company.json' --exclude='config/db.example.php' ./ $DEPLOYPATH

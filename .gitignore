@@ -1,0 +1,12 @@
+config/db.php
+config/company.json
+.claude/
+*.sql
+*.zip
+*.env
+error_log
+fix_passwords.php
+pages/debug_payslips.php
+setup/
+company details.txt
+php.ini

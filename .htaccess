@@ -1,0 +1,28 @@
+# Root .htaccess — Hyundai Invoicing System
+
+# Deny direct access to sensitive directories
+Options -Indexes
+
+# Force HTTPS (uncomment when SSL is active on your host)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Protect config and includes from direct browser access
+<FilesMatch "\.(php)$">
+    # Handled per-directory below
+</FilesMatch>
+
+# Default document
+DirectoryIndex index.php
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Hide server signature
+ServerSignature Off
