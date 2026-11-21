@@ -17,9 +17,51 @@ function login(string $phone, string $pin): bool {
         $_SESSION['user_role']     = $user['role'];
         $_SESSION['branch_id']     = $user['branch_id'];
         $_SESSION['last_activity'] = time();
+        $_SESSION['login_time']    = time();
+        $_SESSION['ua_hash']       = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+        $_SESSION['csrf_token']    = bin2hex(random_bytes(32));
         return true;
     }
     return false;
+}
+
+// ── Brute-force protection: 5 wrong PINs in 15 minutes locks that phone + IP ──
+const LOGIN_MAX_FAILS = 5;
+const LOGIN_WINDOW    = 900;
+
+function loginThrottleFile(string $phone): string {
+    $dir = sys_get_temp_dir() . '/cs_login';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    $key = hash('sha256', ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . preg_replace('/\D+/', '', $phone));
+    return $dir . '/' . $key . '.json';
+}
+
+function loginFailures(string $phone): array {
+    $f = loginThrottleFile($phone);
+    $list = is_file($f) ? (json_decode((string)@file_get_contents($f), true) ?: []) : [];
+    $cut = time() - LOGIN_WINDOW;
+    return array_values(array_filter($list, fn($t) => is_int($t) && $t > $cut));
+}
+
+// Seconds left on the lock, or 0 when login is allowed.
+function loginLockedFor(string $phone): int {
+    $fails = loginFailures($phone);
+    if (count($fails) < LOGIN_MAX_FAILS) {
+        return 0;
+    }
+    return max(1, min($fails) + LOGIN_WINDOW - time());
+}
+
+function recordLoginFailure(string $phone): void {
+    $fails   = loginFailures($phone);
+    $fails[] = time();
+    @file_put_contents(loginThrottleFile($phone), json_encode($fails), LOCK_EX);
+}
+
+function clearLoginFailures(string $phone): void {
+    @unlink(loginThrottleFile($phone));
 }
 
 function logout(): void {

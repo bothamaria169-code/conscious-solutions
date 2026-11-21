@@ -15,9 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($phone) || empty($pin)) {
         $error = 'Please enter your phone number and PIN.';
+    } elseif (($wait = loginLockedFor($phone)) > 0) {
+        $error = 'Too many failed attempts. Please try again in ' . ceil($wait / 60) . ' minute(s).';
     } elseif (!login($phone, $pin)) {
+        recordLoginFailure($phone);
+        usleep(400000);
         $error = 'Invalid phone number or PIN. Please try again.';
     } else {
+        clearLoginFailures($phone);
         header('Location: ' . BASE_PATH . '/pages/dashboard.php');
         exit;
     }
