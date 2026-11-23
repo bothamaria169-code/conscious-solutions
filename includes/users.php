@@ -21,8 +21,20 @@ function getUserById(int $id): ?array {
     return $stmt->fetch() ?: null;
 }
 
+// The old default PINs were published in the README, so they may never be used.
+function pinProblem(string $pin): string {
+    if (!preg_match('/^\d{4,10}$/', $pin)) {
+        return 'The PIN must be 4 to 10 digits.';
+    }
+    if (in_array($pin, ['1234', '2345', '3456', '4567'], true) || preg_match('/^(\d)\1+$/', $pin)) {
+        return 'That PIN is too easy to guess. Please choose another one.';
+    }
+    return '';
+}
+
 function createUser(array $data): array {
     $db = getDB();
+    if (($problem = pinProblem($data['pin'])) !== '') return ['success' => false, 'error' => $problem];
     $check = $db->prepare('SELECT id FROM users WHERE phone = ?');
     $check->execute([$data['phone']]);
     if ($check->fetch()) return ['success' => false, 'error' => 'Phone number already registered.'];
@@ -40,6 +52,7 @@ function createUser(array $data): array {
 
 function updateUser(int $id, array $data): array {
     $db = getDB();
+    if (!empty($data['pin']) && ($problem = pinProblem($data['pin'])) !== '') return ['success' => false, 'error' => $problem];
     // Check phone unique (excluding self)
     $check = $db->prepare('SELECT id FROM users WHERE phone = ? AND id != ?');
     $check->execute([$data['phone'], $id]);

@@ -1,13 +1,41 @@
 # Conscious Solutions - root .htaccess
+# The guard restores this file. Change it in GitHub, never on the server.
 Options -Indexes
-DirectoryIndex index.php
+DirectoryIndex signin.php
 ServerSignature Off
+ErrorDocument 403 "Access denied."
+ErrorDocument 503 "<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><meta name='robots' content='noindex'><title>Temporarily closed</title><body style='font-family:sans-serif;text-align:center;padding:15vh 16px'><h1>Temporarily closed</h1><p>This system is closed for maintenance.</p></body></html>"
 
-# Force HTTPS
 RewriteEngine On
+
+# 1. SITE LOCK (locked by default, live server only).
+#    Open for everyone: create the file  /home/conscioussol/cs_guard/UNLOCKED
+#    Open for one person: create a file named after their IP address in
+#    /home/conscioussol/cs_guard/allow/
+#    SSL certificate renewal checks are always let through.
+RewriteCond %{DOCUMENT_ROOT} ^/home/conscioussol/
+RewriteCond /home/conscioussol/cs_guard/UNLOCKED !-f
+RewriteCond /home/conscioussol/cs_guard/allow/%{REMOTE_ADDR} !-f
+RewriteRule !^\.well-known/(acme-challenge|pki-validation|cpanel-dcv)/ - [R=503,L]
+
+# 2. ONLY these scripts may run. Anything else that looks like a script
+#    (a dropped shell, a changed index.php, x.php.jpg, x.php/y) is refused.
+#    A new page must be added to this list.
+RewriteRule ^(?!(?:signin|logout)\.php$|pages/(?:attendance|dashboard|invoices|payslips|print_invoice|print_payslip|print_statement|settings|statement|timeclock|users)\.php$).*\.(?:php[0-9a-z]*|phtml|pht|phar|phps|inc|cgi|pl|py|rb|sh|shtml|shtm|stm|asp|aspx|jsp)(?:[./]|$) - [F,NC,L]
+
+# 3. Force HTTPS (not for SSL certificate checks)
 RewriteCond %{HTTPS} off
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+RewriteRule !^\.well-known/ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 4. Block TRACE and unusual methods
+RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD|OPTIONS)$
+RewriteRule ^ - [F]
+
+# 5. index.php is dead, with or without mod_rewrite
+<Files "index.php">
+    Require all denied
+</Files>
 
 # Never serve sensitive file types
 <FilesMatch "\.(sql|md|log|bak|sh|env|ini|lock|yml|zip|json|example\.php)$">
@@ -21,10 +49,6 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 <FilesMatch "^(seed_passwords|setup_users|debug_payslips|fix_passwords)\.php$">
     Require all denied
 </FilesMatch>
-
-# Block TRACE and unusual methods
-RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD|OPTIONS)$
-RewriteRule ^ - [F]
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"

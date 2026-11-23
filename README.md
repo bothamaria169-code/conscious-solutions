@@ -37,16 +37,15 @@ source sql/schema.sql
 ### 2. Config
 Edit `config/db.php` with your database credentials.
 
-### 3. Seed passwords
-Visit `/setup/seed_passwords.php` once after deployment to regenerate secure PIN hashes.
+### 3. Users
+Logins and PINs are never written down in this repository. Add or change them in **Users** (Master Admin).
 
-## Default Logins
-| User           | Phone       | PIN  |
-|----------------|-------------|------|
-| Master Admin   | 0820000001  | 1234 |
-| East Rand      | 0821111111  | 2345 |
-| Kempton Park   | 0832222222  | 3456 |
-| The Glen       | 0713333333  | 4567 |
+## Security
+The site is **locked by default** after a deploy. How to unlock it, and what to do after a hack: [docs/SECURITY-RECOVERY.md](docs/SECURITY-RECOVERY.md).
+
+- `signin.php` is the login page. `index.php` is blocked on purpose.
+- A new page must be added to the script list in `.htaccess` (section 2) or it shows "Access denied".
+- Never edit files on the server: the guard puts them back. Change them here and deploy.
 
 ## File Structure
 ```
@@ -70,5 +69,8 @@ conscious-solutions/
 ├── sql/
 │   ├── schema.sql       # Full schema with CREATE DATABASE
 │   └── schema_hosting.sql # Schema for shared hosting
-└── index.php            # Login page
+├── security/guard.php   # Repairs changed files (runs outside the web root)
+├── deploy.sh            # Run by cPanel on every deploy
+├── index.php            # Blocked on purpose
+└── signin.php           # Login page
 ```

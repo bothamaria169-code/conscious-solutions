@@ -80,7 +80,7 @@ if (!empty($_SESSION['user_id'])) {
         session_unset();
         session_destroy();
         if (PHP_SAPI !== 'cli') {
-            header('Location: ' . BASE_PATH . '/index.php?timeout=1');
+            header('Location: ' . BASE_PATH . '/signin.php?timeout=1');
             exit;
         }
     }
@@ -138,7 +138,7 @@ if (PHP_SAPI !== 'cli') {
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > SESSION_LIFETIME) {
     session_unset();
     session_destroy();
-    header('Location: ' . BASE_PATH . '/index.php?timeout=1');
+    header('Location: ' . BASE_PATH . '/signin.php?timeout=1');
     exit;
 }
 if (isset($_SESSION['user_id'])) {

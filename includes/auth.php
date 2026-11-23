@@ -67,13 +67,13 @@ function clearLoginFailures(string $phone): void {
 function logout(): void {
     session_unset();
     session_destroy();
-    header('Location: ' . BASE_PATH . '/index.php');
+    header('Location: ' . BASE_PATH . '/signin.php');
     exit;
 }
 
 function requireLogin(): void {
     if (empty($_SESSION['user_id'])) {
-        header('Location: ' . BASE_PATH . '/index.php');
+        header('Location: ' . BASE_PATH . '/signin.php');
         exit;
     }
 }
@@ -105,7 +105,7 @@ function currentUser(): array {
         // User deactivated — force logout
         session_unset();
         session_destroy();
-        header('Location: ' . BASE_PATH . '/index.php');
+        header('Location: ' . BASE_PATH . '/signin.php');
         exit;
     }
     // Always keep session fully in sync with DB
